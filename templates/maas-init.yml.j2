@@ -1,0 +1,112 @@
+
+---
+{{ ansible_managed | comment() }}
+
+api_url: {{ maas_api_url | d() }}
+
+
+
+###
+## general settings page
+
+commissioning_distro_series: {{ maas_commissioning_distro_series }}
+
+default_min_hwe_kernel: {{ maas_default_min_hwe_kernel }}
+
+default_osystem: {{ maas_default_osystem }}
+
+default_distro_series: {{ maas_default_distro_series }}
+
+maas_name: {{ maas_name }}
+
+{% if maas_upstream_dns_servers is defined %}
+upstream_dns:
+{% for server in maas_upstream_dns_servers %}
+  - '{{ server }}'
+{% endfor %}
+{% elif maas_upstream_dns_servers is not defined %}
+upstream_dns: []
+{% endif %}
+
+# Defines DNSSEC validation of upstream zones
+# auto, no, yes
+dnssec_validation: '{{ maas_dnssec_validation }}'
+
+{% if maas_ntp_servers is defined %}
+ntp_servers:
+{% for server in maas_ntp_servers %}
+  - '{{ server }}'
+{% endfor %}
+{% elif maas_ntp_servers is not defined %}
+ntp_servers: []
+{% endif %}
+
+ntp_use_external_only: {{ maas_ntp_use_external_only }}
+
+network_discovery: {{ maas_network_discovery }}
+
+
+###
+## DNS page
+
+{% if maas_dns_domains is defined %}
+dns_domains:
+{% for domain in maas_dns_domains %}
+  - '{{ domain }}'
+{% endfor %}
+{% elif maas_dns_domains is not defined %}
+dns_domains: []
+{% endif %}
+
+
+###
+## Zones page
+
+{% if maas_zones is defined %}
+zones:
+{% for zone in maas_zones %}
+  - name: '{{ zone.name }}'
+    description: '{{ zone.description | d() }}'
+{% endfor %}
+{% elif maas_zones is not defined %}
+zones: []
+{% endif %}
+
+
+###
+## Subnets page
+
+{% if maas_spaces is defined %}
+spaces:
+{% for space in maas_spaces %}
+  - '{{ space }}'
+{% endfor %}
+{% elif maas_spaces is not defined %}
+spaces: []
+{% endif %}
+
+{% if maas_subnets is defined %}
+subnets:
+{% for subnet in maas_subnets %}
+  {{ subnet }}:
+{% if maas_subnets[subnet].reserved is defined %}
+    reserved:
+{% for range in maas_subnets[subnet].reserved %}
+      - start_ip: '{{ range.start_ip }}'
+        end_ip: '{{ range.end_ip }}'
+{% if range.comment is defined %}
+        comment: '{{ range.comment }}'
+{% endif %}
+{% endfor %}
+{% endif %}
+{% if maas_subnets[subnet].dynamic is defined %}
+    dynamic:
+{% for range in maas_subnets[subnet].dynamic %}
+      - start_ip: '{{ range.start_ip }}'
+        end_ip: '{{ range.end_ip }}'
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% elif maas_subnets is not defined %}
+subnets: []
+{% endif %}

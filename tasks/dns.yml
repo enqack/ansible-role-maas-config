@@ -1,0 +1,29 @@
+---
+# tasks file for enqack.maas-control
+
+
+- block:
+
+  ###
+  ## DNS page
+
+  - name: Capturing MAAS DNS Domains
+    shell: "maas {{ maas_login_profile }} domains read | jq ."
+    register: "maas_dns_domains_config"
+    changed_when: false
+
+
+  # - name: Capturing MAAS DNS Resources
+  #   shell: "maas {{ maas_login_profile }} dnsresources read | jq ."
+  #   register: "maas_dns_resources_config"
+  #   become: false
+  #   changed_when: false
+
+
+  - name: Configuring MAAS DNS Domains
+    command: "maas {{ maas_login_profile }} domains create name={{ item }}"
+    with_items:
+      - "{{ maas_dns_domains }}"
+    when: item not in maas_dns_domains_config['stdout']
+
+  become: false

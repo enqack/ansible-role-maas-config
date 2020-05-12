@@ -1,0 +1,42 @@
+---
+# tasks file for enqack.maas-control
+
+- name: Capturing MAAS Boot Image Sources
+  shell: "maas {{ maas_login_profile }} boot-sources read | jq ."
+  register: "maas_boot_image_sources"
+  become: false
+  changed_when: false
+
+
+- name: Capturing MAAS Boot Source Selections
+  shell: >
+      maas {{ maas_login_profile }} boot-source-selections
+      read {{ item['id'] }} | jq .
+  register: "maas_boot_source_selections"
+  become: false
+  changed_when: false
+  with_items: "{{ maas_boot_image_sources['stdout']|from_json }}"
+
+
+- name: Configuring MAAS Boot Sources
+  command: >
+      maas {{ maas_login_profile }} boot-source-selections
+      create {{ item[0]['id'] }}
+      arches={{ item[1]['arches']|default('amd64')}}
+      labels={{ item[1]['labels']|default('*') }}
+      os={{ item[1]['os'] }}
+      release={{ item[1]['release'] }}
+      subarches={{ item[1]['subarches']|default('*') }}
+  become: false
+  register: "maas_boot_sources_updated"
+  with_nested:
+    - "{{ maas_boot_image_sources['stdout']|from_json }}"
+    - "{{ maas_boot_images['images'] }}"
+  when: item[1]['release'] not in maas_boot_source_selections['results'][0]['stdout']
+
+
+- name: Importing MAAS Boot Images
+  command: "maas {{ maas_login_profile }} boot-resources import"
+  become: false
+  when: maas_boot_sources_updated['changed']
+

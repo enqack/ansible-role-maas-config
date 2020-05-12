@@ -1,0 +1,61 @@
+---
+# tasks file for enqack.maas-control
+
+- block:
+
+  - name: Installing JQ
+    package:
+      name: "jq"
+      state: "present"
+
+  - name: Capturing MAAS CLI API Key
+    command: "maas-region apikey --username={{ maas_api_user }}"
+    register: "maas_api_key"
+    changed_when: false
+
+  - debug:
+      msg: "{{maas_api_key.stdout.split()[0]}}"
+
+  - name: Parse maas-init-config.py config file
+    template:
+      src: "{{ role_path }}/templates/maas-init.yml.j2"
+      dest: "{{ role_path }}/files/maas-init.yml"
+      backup: yes
+
+
+  - name: Run maas-init-config.py
+    command: >
+        {{ role_path }}/files/maas-init-config.py
+        --apikey "{{ maas_api_key.stdout.split()[0] }}"
+        {{ role_path }}/files/maas-init.yml
+    # when: maas_run_init_config | default()
+    become: false
+
+
+  - name: Logging Into MAAS API
+    command: >
+        maas login {{ maas_login_profile }} {{ maas_api_url }}
+        {{ maas_api_key.stdout.split()[0] }}
+    become: false
+    changed_when: false
+
+
+  - include: pools.yml
+
+  - include: zones.yml
+
+  - include: images.yml
+
+  - include: dns.yml
+
+  - include: settings.yml
+
+  - include: pods.yml
+
+  # - name: Logging Out Of MAAS API
+  #   command: "maas logout {{ maas_login_profile }}"
+  #   become: false
+  #   changed_when: false
+
+  when: inventory_hostname in groups.maas_region_controller
+  run_once: true

@@ -1,0 +1,46 @@
+---
+# tasks file for enqack.maas-control
+
+- block:
+
+  - name: Capturing MAAS Zones
+    shell: maas {{ maas_login_profile }} zones read | jq .[].name | sed 's|\"||g' 
+    register: "maas_zones_config"
+    changed_when: false
+
+  # - name: Delete unspecified MAAS Zones
+  #   command: maas {{ maas_login_profile }} zone delete {{ item[1] }}
+  #   become: false
+  #   when:
+  #     - item[0].name not in maas_zones_config['stdout'].split()
+  #     - item[0].name != item[1]
+  #   with_nested:
+  #     - "{{ maas_zones }}"
+  #     - "{{ maas_zones_config['stdout'].split() }}"
+
+  - name: Delete unspecified MAAS Zones
+    command: maas {{ maas_login_profile }} zone delete {{ item.name }}
+    when:
+      - item.state|default() in ['absent', 'delete']
+      - item.name in maas_zones_config['stdout']
+    with_items: "{{ maas_zones }}"
+
+
+  - name: Create new MAAS Zones
+    command: >
+        maas {{ maas_login_profile }} zones create
+        name={{ item.name }} description="{{ item.description | default() }}"
+    when:
+      - item.state | default() in ['present', 'create'] 
+      - item.name not in maas_zones_config['stdout']
+    with_items: "{{ maas_zones }}"
+
+
+  - name: Update MAAS Zone descriptions
+    command: >
+        maas {{ maas_login_profile }} zone update
+        {{ item.name }} description="{{ item.description }}"
+    when: item.description | default()
+    with_items: "{{ maas_zones }}"
+
+  become: false

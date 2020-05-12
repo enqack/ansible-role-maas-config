@@ -1,0 +1,29 @@
+---
+# tasks file for enqack.maas-control
+
+- block:
+
+  - name: Capturing MAAS Resource Pools
+    shell: maas {{ maas_login_profile }} resource-pools read | jq .[].name | sed 's|\"||g' 
+    register: "maas_resource_pools_config"
+    changed_when: false
+
+
+  - name: Delete unspecified MAAS Resource Pools
+    command: maas {{ maas_login_profile }} resource-pool delete {{ item.name }}
+    when:
+      - item.state|default() in ['absent', 'delete']
+      - item.name in maas_resource_pools_config['stdout']
+    with_items: "{{ maas_resource_pools }}"
+
+
+  - name: Create new MAAS Resource Pools
+    command: >
+        maas {{ maas_login_profile }} resource-pools create
+        name={{ item.name }} description="{{ item.description | default() }}"
+    when:
+      - item.state | default() in ['present', 'create'] 
+      - item.name not in maas_resource_pools_config['stdout']
+    with_items: "{{ maas_resource_pools }}"
+
+  become: false

@@ -1,0 +1,140 @@
+---
+# tasks file for enqack.maas-control
+
+- block:
+
+  - name: Capturing MAAS Commissioning Release
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=commissioning_distro_series | jq . | sed 's|\"||g'
+    register: "maas_commissioning_distro_series_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS Commissioning Release
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=commissioning_distro_series value={{ maas_commissioning_distro_series }}
+    when: maas_commissioning_distro_series_config['stdout'] != maas_commissioning_distro_series
+
+
+  - name: Capturing MAAS Commissioning Minimum Kernel Version
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=default_min_hwe_kernel | jq . | sed 's|\"||g'
+    register: "maas_default_min_hwe_kernel_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS Commissioning Minimum Kernel Version
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=default_min_hwe_kernel value={{ maas_default_min_hwe_kernel }}
+    when: maas_default_min_hwe_kernel_config['stdout'] != maas_default_min_hwe_kernel
+
+
+  - name: Capturing MAAS Deploy Default OS
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=default_osystem | jq . | sed 's|\"||g'
+    register: "maas_default_osystem_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS Deploy Default OS
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=default_osystem value={{ maas_default_osystem }}
+    when: maas_default_osystem_config['stdout'] != maas_default_osystem
+
+
+  - name: Capturing MAAS Deploy Default OS Release
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=default_distro_series | jq . | sed 's|\"||g'
+    register: "maas_default_distro_series_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS Deploy Default OS Release
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=default_distro_series value={{ maas_default_distro_series }}
+    when: maas_default_distro_series_config['stdout'] != maas_default_distro_series
+
+
+  - name: Capturing MAAS Name
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=maas_name | jq . | sed 's|\"||g'
+    register: "maas_name_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS Name
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=maas_name value={{ maas_name }}
+    when: maas_name_config['stdout'] != maas_name
+
+
+  - name: Capturing MAAS DNS Upstream Server(s)
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=upstream_dns | jq . | sed 's|\"||g'
+    register: "maas_upstream_dns_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS DNS Upstream Server(s)
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=upstream_dns value="{{ maas_upstream_dns_servers|join(' ') }}"
+    when: maas_upstream_dns_config['stdout'] != maas_upstream_dns_servers|join(' ')
+
+
+  - name: Capturing MAAS DNSSEC Validation Config
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=dnssec_validation | jq . | sed 's|\"||g'
+    register: "maas_dnssec_validation_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS DNSSEC Validation Config
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=dnssec_validation value="{{ maas_dnssec_validation }}"
+    when: maas_dnssec_validation_config['stdout'] != maas_dnssec_validation
+
+
+  - name: Capturing MAAS NTP Server(s)
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=ntp_servers | jq . | sed 's|\"||g'
+    register: "maas_ntp_servers_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS NTP Server(s)
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=ntp_servers value={{ maas_ntp_servers|join(',') }}
+    when: maas_ntp_servers_config['stdout'] != maas_ntp_servers|join(' ')
+
+
+  - name: Capturing MAAS NTP Use external NTP servers only Config
+    shell: >
+        maas {{ maas_login_profile }} maas get-config
+        name=ntp_external_only | jq .
+    register: "maas_ntp_use_external_only_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS NTP Use external NTP servers only Config
+    command: >
+        maas {{ maas_login_profile }} maas set-config
+        name=ntp_external_only value={{ maas_ntp_use_external_only }}
+    when: maas_ntp_use_external_only_config['stdout'] != maas_ntp_use_external_only|lower
+
+  become: false

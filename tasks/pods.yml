@@ -1,0 +1,24 @@
+---
+# Configure pods
+
+- block:
+
+  ###
+  ## Pods page
+
+  - name: Capturing MAAS Pods
+    shell: maas {{ maas_login_profile }} pods read | jq '.[] | .name'
+    register: "maas_pods_config"
+    changed_when: false
+
+
+  - name: Configuring MAAS Pods
+    command: >
+        maas {{ maas_login_profile }} pods create name={{ item.name }}
+        type={{ item.type }} zone={{ item.zone }} pool={{ item.pool }}
+        power_address={{ item.power_address }}
+    with_items:
+      - "{{ maas_pods }}"
+    when: item.name not in maas_pods_config['stdout']
+
+  become: false

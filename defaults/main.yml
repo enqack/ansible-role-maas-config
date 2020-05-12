@@ -1,0 +1,78 @@
+---
+# defaults file for enqack.maas-control
+
+maas_login_profile: 'admin'
+maas_api_url: '{{ maas_region_controller_url }}/api/2.0'
+maas_api_user: 'root'
+
+
+## DNS page
+
+maas_dns_domains: []
+
+
+## general settings page
+
+maas_commissioning_distro_series: 'bionic'
+maas_default_min_hwe_kernel:
+
+maas_default_osystem: 'ubuntu'
+maas_default_distro_series: 'bionic'
+
+maas_kernel_opts:
+
+maas_name: 'default'
+maas_enable_analytics: false
+
+# Defines upstream DNS servers to configure
+maas_upstream_dns_servers:
+  - '8.8.8.8'
+  - '4.4.4.4'
+
+# Defines DNSSEC validation of upstream zones
+# auto, no, yes
+maas_dnssec_validation: 'auto'
+
+maas_ntp_servers:
+  - 'ntp.ubuntu.com'
+
+maas_ntp_use_external_only: false
+
+maas_network_discovery: true
+
+## package repositories page
+
+maas_repositories: []
+
+maas_ppas: []
+
+
+## images pages
+
+maas_boot_images:
+  arches:
+    - 'amd64'
+  images:
+    - os: 'ubuntu'
+      release: 'bionic'
+    - os: 'ubuntu'
+      release: 'xenial'
+
+
+## zones page
+
+maas_zones:
+  - name: 'default'
+    description:
+
+
+## subnets page
+
+maas_spaces:
+  - 'default'
+
+# maas_subnets:
+#   192.168.0.0/24:
+#     reserved:
+#       - start_ip: 192.168.0.100
+#         end_ip: 192.168.0.200
